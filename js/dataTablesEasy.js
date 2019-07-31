@@ -2,12 +2,19 @@
 // 占用全局变量：dataTableEasy
 // 依赖JQuery
 
+let dataTableEasy;
 function createDataTable(id, listUrl, columns, selectList) {
     let table = $(`#${id}`);
 
     // 创建表格头部
     let thead = [];
     thead.push(`<thead><tr>`);
+    // 添加顶部搜索框
+    for (let i = 0; i < columns.length; i++) {
+        thead.push(`<th><input type="text" placeholder="筛选 ${columns[i].data}"></th>`);
+    }
+    thead.push(`</tr>`);
+    // 添加表格表头
     for (let i = 0; i < columns.length; i++) {
         thead.push(`<th>${columns[i].data}</th>`);
     }
@@ -16,20 +23,35 @@ function createDataTable(id, listUrl, columns, selectList) {
 
     // 创建表格
     dataTableEasy = table.DataTable({
+        "serverSide": true,
+        processing: true,
         ajax: {
             url: listUrl,
+            type: 'get',
             dataSrc: 'data'
         },
         columns: columns,
+        "deferRender": true,
         "columnDefs": [
             {
                 "render": function ( data, type, row ) {
-                    return data +' ('+ row['salary']+')';
+                    return data +' ('+ row['remark']+')';
                 },
                 "targets": 0
             }
         ]
     });
+
+    // 添加搜索框事件
+    dataTableEasy.columns().every( function () {
+        var that = this;
+        $( 'input', $(this.header()) ).on( 'keyup change', function () {
+            if ( that.search() !== this.value ) {
+                that.search( this.value )
+                    .draw();
+            }
+        } );
+    } );
 
     // 绑定表格事件
     dataTableEasy.on( 'order.dt',  (e, settings, json) => { console.log( 'Order' ); } )
@@ -44,7 +66,7 @@ function createDataTable(id, listUrl, columns, selectList) {
         }
         for (let index in selectList) {
             if (cell[0][0].column === selectList[index].columnNumber) {
-                let select = [`<select id="tempSelect" onblur="editOnblur(this);" onchange="editOnblur(this);">`];
+                let select = [`<select id="tempSelect" onblur="editOnblur(this);" onchange="this.onblur(this);">`];
                 for (let valueIndex in selectList[index].values) {
                     let selected = '';
                     if (cell.data() === selectList[index].values[valueIndex].name) {
@@ -65,5 +87,9 @@ function createDataTable(id, listUrl, columns, selectList) {
 }
 
 function editOnblur(dom) {
-    dataTableEasy.cell($(dom).parent()[0]).data($(dom).val());
+    try {
+        dataTableEasy.cell($(dom).parent()[0]).data($(dom).val());
+    }catch(e){
+
+    }
 }

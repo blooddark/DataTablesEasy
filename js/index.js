@@ -1,26 +1,22 @@
 let id = 'table';
 let selectList = [{
-    columnNumber: 1,
+    columnNumber: 2,
     values: [
         {
-            name: 'test1Name',
-            value: 'test1Value'
+            name: '男',
+            value: '男'
         },
         {
-            name: 'test2Name',
-            value: 'test2Value'
-        },
-        {
-            name: 'test3Name',
-            value: 'test3Value'
+            name: '女',
+            value: '女'
         },
     ]
 }];
-let listUrl = 'https://www.easy-mock.com/mock/5d3fed7b8b554b4f4a4d0368/dataTables/';
+let listUrl = 'https://www.easy-mock.com/mock/5d3fed7b8b554b4f4a4d0368/dataTables/list';
 let columns = [
-    { data: 'name' },
-    { data: 'position' },
-    { data: 'salary' },
-    { data: 'office' }
+    { data: 'id' },
+    { data: 'username' },
+    { data: 'gender' },
+    { data: 'remark' }
 ];
 createDataTable(id, listUrl, columns, selectList);
