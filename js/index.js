@@ -13,10 +13,20 @@ let selectList = [{
     ]
 }];
 let listUrl = 'https://www.easy-mock.com/mock/5d3fed7b8b554b4f4a4d0368/dataTables/list';
+let editUrl = 'https://www.easy-mock.com/mock/5d3fed7b8b554b4f4a4d0368/dataTables/success';
+let deleteUrl = 'https://www.easy-mock.com/mock/5d3fed7b8b554b4f4a4d0368/dataTables/success';
+let addUrl = 'https://www.easy-mock.com/mock/5d3fed7b8b554b4f4a4d0368/dataTables/success';
 let columns = [
-    { data: 'id' },
+    { data: 'id' , editable: false},
     { data: 'username' },
     { data: 'gender' },
     { data: 'remark' }
 ];
-createDataTable(id, listUrl, columns, selectList);
+let buttonList = ['add',
+    'delete',
+    'copy',
+    'csv',
+    'excel',
+    'pdf',
+    'print'];
+createDataTable(id, listUrl, columns, selectList, editUrl, deleteUrl, addUrl, buttonList);
