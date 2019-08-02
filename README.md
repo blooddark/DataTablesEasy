@@ -89,18 +89,27 @@ let columns = [
     { data: 'remark'}
 ]
 ```
-##### editable （可选）
+#### columns 的可选参数
+##### editable （columns可选）
 是否开启此列双击编辑功能，默认开启，但需要 `editUrl`，如果没有 `editUrl` 此项不生效。
-##### searchable （可选）
+##### searchable （columns可选）
 是否开启此列搜索功能，默认关闭。如果开启，将在表头上方自动生成搜索框，实现搜索功能。
-##### selectList （可选）
+##### selectList （columns可选）
 只在开启双击编辑功能时生效，如果编辑的项是下拉选择框，在这个参数内输入待选项的 `name` 和 `value`，
 此参数有值则认为此列为下拉选择框，同时会影响到添加功能。
 示例：`[{name: '备注1',value: '1'},{name: '备注2',value: '2'}]`
-##### radioList （可选）
+##### radioList （columns可选）
 只在开启双击编辑功能时生效，如果编辑的项是下拉选择框，在这个参数内输入待选项的 `name` 和 `value`，
 此参数有值则认为此列为单选框，同时会影响到添加功能。
 示例：`[{name: '男',value: '男'},{name: '女',value: '女'}]`
+##### render （columns可选）
+函数参数，用于自定义列内容。  
+示例：
+```js
+render: (data, type, row) => {
+    return data +' ('+ row['remark']+')';
+}
+```
 #### addUrl （可选）
 添加数据的接口，如果此项有值，则在最上方显示添加按钮，并实现添加功能。
 #### editUrl （可选）
