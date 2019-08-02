@@ -9,8 +9,8 @@ let columns = [
             return data +' ('+ row['remark']+')';
         }},
     { data: 'username', searchable: true },
-    { data: 'gender' , searchable: true, selectList: [{name: '男',value: '男'},{name: '女',value: '女'}]},
-    { data: 'remark'}
+    { data: 'gender' , searchable: true},
+    { data: 'remark', selectList: [{name: '备注1',value: '1'},{name: '备注2',value: '2'}]}
 ];
 let buttonList = ['copy','csv', 'excel', 'pdf', 'print'];
 

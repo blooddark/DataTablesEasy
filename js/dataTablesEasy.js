@@ -73,34 +73,6 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
     return dataTableEasy;
 }
 
-// 单元格编辑，失焦关闭可输入表单
-function editOnblur(dom) {
-    dataTableEasy.cell($(dom).parent()[0]).data($(dom).val());
-}
-
-// 单元格编辑，上传服务器
-function editOnChange(dom) {
-    let data = {id: dataTableEasy.cell($(dom).parent().parent().children(0)[0]).data()};
-    data[dataTableEasy.columnsRecord[$(dom).attr('columns')].data] = $(dom).val();
-    $.ajax({
-        url: dataTableEasy.editUrl,
-        method: 'put',
-        data: data,
-        success: (res) => {
-            toastr.success('修改成功');
-        },
-        error: (res) => {
-            toastr.error('网络异常，或服务器出现故障')
-        },
-        complete: () => {
-            try {
-                dataTableEasy.cell($(dom).parent()[0]).data($(dom).val());
-            }catch(e){
-            }
-        }
-    });
-}
-
 // 添加数据
 function handleAddSubmit() {
     let data = {};
@@ -263,7 +235,7 @@ function tableCellEditable(id) {
                 if (cell.data() === item.name) {
                     selected = 'selected';
                 }
-                select.push(`<option ${selected} value="${item.name}">${item.name}</option>`)
+                select.push(`<option ${selected} value="${item.value}">${item.name}</option>`)
             }
             select.push(`</select>`);
             cell.data(select.join(''));
@@ -276,4 +248,38 @@ function tableCellEditable(id) {
         cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="text" value="${cell.data()}" onchange="editOnChange(this)" onblur="editOnblur(this);"/>`);
         $('#tempInput').val("").focus().val(val); // 将光标定位到后面
     });
+}
+
+// 单元格编辑，上传服务器
+function editOnChange(dom) {
+    let data = {id: dataTableEasy.cell($(dom).parent().parent().children(0)[0]).data()};
+    data[dataTableEasy.columnsRecord[$(dom).attr('columns')].data] = $(dom).val();
+    $.ajax({
+        url: dataTableEasy.editUrl,
+        method: 'put',
+        data: data,
+        success: (res) => {
+            toastr.success('修改成功');
+        },
+        error: (res) => {
+            toastr.error('网络异常，或服务器出现故障')
+        },
+        complete: () => {
+            try {
+                editOnblur(dom);
+            }catch(e){
+            }
+        }
+    });
+}
+
+// 单元格编辑，失焦关闭可输入表单
+function editOnblur(dom) {
+    let text = $(dom).val();
+    for (let item of dataTableEasy.columnsRecord[$(dom).attr('columns')].selectList) {
+        if (item.value === text) {
+            text = item.name;
+        }
+    }
+    dataTableEasy.cell($(dom).parent()[0]).data(text);
 }
