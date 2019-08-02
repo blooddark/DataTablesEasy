@@ -90,6 +90,8 @@ let columns = [
 ]
 ```
 #### columns 的可选参数
+##### visible （columns可选）
+是否显示本列，默认为true。
 ##### editable （columns可选）
 是否开启此列双击编辑功能，默认开启，但需要 `editUrl`，如果没有 `editUrl` 此项不生效。
 ##### searchable （columns可选）
@@ -136,6 +138,15 @@ let buttonList = ['copy','csv', 'excel', 'pdf', 'print']
 导出 pdf 格式文件。
 ###### print
 调起浏览器打印功能。
+##### 按钮拓展说明
+传入按钮对象即可：
+```js
+let buttons = [{
+    text: 'Text',
+    action: ( e, dt, node, config ) => {
+    }
+}]
+```
 ### 数据传输格式说明
 #### listUrl 接口
 方法：get

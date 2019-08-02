@@ -4,7 +4,9 @@
 
 let dataTableEasy;
 // 创建数据表格
-function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, buttonList) {
+function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, buttonList,
+                         serverSide = true, processing = true, deferRender = true, select = true, responsive = true,
+                         dom = '<"html5buttons"B>lTfgitp') {
     let table = $(`#${id}`);
 
     // 创建表格头部
@@ -57,19 +59,19 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
 
     // 创建表格
     dataTableEasy = table.DataTable({
-        serverSide: true,
-        processing: true,
+        serverSide: serverSide,
+        processing: processing,
         ajax: {
             url: listUrl,
             method: 'get',
             dataSrc: 'data'
         },
         columns: columns,
-        deferRender: true,
+        deferRender: deferRender,
         columnDefs: columnDefs,
-        select: true,
-        responsive: true,
-        dom: '<"html5buttons"B>lTfgitp',
+        select: select,
+        responsive: responsive,
+        dom: dom,
         buttons: buttons
     });
 
@@ -253,6 +255,7 @@ function createTableButton(table, buttonSet) {
             case 'excel': buttons.push(excelButton); break;
             case 'pdf': buttons.push(pdfButton); break;
             case 'print': buttons.push(printButton); break;
+            default: buttons.push(item);
         }
     }
     return buttons;
