@@ -1,5 +1,5 @@
 # 轻松实现dataTables常用功能
-二次封装dataTables，轻松使用。
+二次封装dataTables，轻松使用。对应后台参考：[Github](https://github.com/blooddark/DataTablesEasyServer)
 ## 创建数据表格 createDataTable
 ### 简单示例：     
 html:   
