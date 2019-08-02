@@ -8,8 +8,8 @@ let columns = [
         render: ( data, type, row ) => {
             return data +' ('+ row['remark']+')';
         }},
-    { data: 'username', searchable: true },
-    { data: 'gender' , searchable: true},
+    { data: 'username', searchable: true},
+    { data: 'gender' , searchable: true, radioList: [{name: '男',value: 'man'},{name: '女',value: 'woman'}]},
     { data: 'remark', selectList: [{name: '备注1',value: '1'},{name: '备注2',value: '2'}]}
 ];
 let buttonList = ['copy','csv', 'excel', 'pdf', 'print'];

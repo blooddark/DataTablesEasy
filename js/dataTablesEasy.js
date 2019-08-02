@@ -124,7 +124,7 @@ function createTableHeader(table, columns) {
     table.html(thead.join(''));
 }
 
-// 添加表格功能按钮
+// 添加表格功能按钮（包括添加功能和删除功能）
 function createTableButton(table, buttonSet) {
     let buttons = [];
     const addButton = {
@@ -136,17 +136,21 @@ function createTableButton(table, buttonSet) {
                 if (item.data === 'id') {
                     continue;
                 }
-                modal.push(`<div style="display: block;margin-top: 10px;" class="form-group"><label class="col-sm-2 control-label">${item.data}</label>`);
+                modal.push(`<div style="display: block;margin-top: 10px;" class="form-group"><label class="col-sm-2 control-label">${item.data}</label><div class="col-sm-10">`);
                 if (item.selectList) {
-                    modal.push(`<div class="col-sm-10"><select name="${item.data}" class="form-control m-b">`);
+                    modal.push(`<select name="${item.data}" class="form-control m-b">`);
                     for (let option of item.selectList) {
                         modal.push(`<option value="${option.value}">${option.name}</option>`);
                     }
                     modal.push(`</select>`);
+                } else if (item.radioList) {
+                    for (let radio of item.radioList) {
+                        modal.push(`<label style="padding-left: 20px;">${radio.name}<input style="margin-left: 10px;" name="${item.data}" type="radio" value="${radio.value}"/></label>`);
+                    }
                 } else {
-                    modal.push(`<div class="col-sm-10"><input name="${item.data}" type="text" class="form-control"></div>`);
+                    modal.push(`<input name="${item.data}" type="text" class="form-control">`);
                 }
-                modal.push(`</div>`);
+                modal.push(`</div></div>`);
             }
             modal.push(`<div style="margin-top: 20px;" class="form-group">
                                 <div class="col-sm-4 col-sm-offset-8">
@@ -240,13 +244,27 @@ function tableCellEditable(id) {
             select.push(`</select>`);
             cell.data(select.join(''));
             $('#tempSelect').focus();
-            return;
         }
-
+        // 判断是否为radio
+        else if (column.radioList) {
+            let radio = [];
+            for (let item of column.radioList) {
+                let checked = '';
+                if (cell.data() === item.name) {
+                    checked = 'checked id="tempRadio"';
+                }
+                radio.push(`&nbsp;&nbsp;&nbsp;&nbsp;${item.name}&nbsp;&nbsp;<input ${checked} name="${column.data}" 
+                    columns="${cell[0][0].column}" type="radio" value="${item.value}" onclick="editOnChange(this)"/>`);
+            }
+            cell.data(radio.join(''));
+            $('#tempRadio').focus();
+        }
         // 否则是input text
-        let val = cell.data(); // 记录之前的值，方便将光标定位到后面
-        cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="text" value="${cell.data()}" onchange="editOnChange(this)" onblur="editOnblur(this);"/>`);
-        $('#tempInput').val("").focus().val(val); // 将光标定位到后面
+        else {
+            let val = cell.data(); // 记录之前的值，方便将光标定位到后面
+            cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="text" value="${cell.data()}" onchange="editOnChange(this)" onblur="editOnblur(this);"/>`);
+            $('#tempInput').val("").focus().val(val); // 将光标定位到后面
+        }
     });
 }
 
@@ -276,8 +294,15 @@ function editOnChange(dom) {
 // 单元格编辑，失焦关闭可输入表单
 function editOnblur(dom) {
     let text = $(dom).val();
-    if (dataTableEasy.columnsRecord[$(dom).attr('columns')].selectList) {
-        for (let item of dataTableEasy.columnsRecord[$(dom).attr('columns')].selectList) {
+    let column = dataTableEasy.columnsRecord[$(dom).attr('columns')];
+    if (column.selectList) {
+        for (let item of column.selectList) {
+            if (item.value === text) {
+                text = item.name;
+            }
+        }
+    } else if (column.radioList) {
+        for (let item of column.radioList) {
             if (item.value === text) {
                 text = item.name;
             }
