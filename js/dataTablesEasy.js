@@ -110,7 +110,7 @@ function handleAddSubmit() {
         success: (res) => {
             if (res.code === 0) {
                 toastr.success('添加成功');
-                dataTableEasy.ajax.reload();
+                dataTableEasy.ajax.reload(null, false);
                 $('#addModal').modal('hide');
             } else {
                 toastr.error(res.msg + ':' + res.code);
@@ -197,7 +197,7 @@ function createTableButton(table, buttonSet) {
             modal.push(`</form></div></div></div></div>`);
             table.append(modal.join(''));
             $('#addModal').modal().on('hide.bs.modal', (e) => {
-                dt.ajax.reload();
+                dt.ajax.reload(null, false);
             });
         }
     };
@@ -219,7 +219,7 @@ function createTableButton(table, buttonSet) {
                 success: (res) => {
                     if (res.code === 0) {
                         toastr.success('删除成功');
-                        dt.ajax.reload();
+                        dt.ajax.reload(null, false);
                     } else {
                         toastr.error(res.msg + ':' + res.code);
                     }
@@ -274,7 +274,7 @@ function tableCellEditable(id) {
         // 判断是否是select
         let column = dataTableEasy.columnsRecord[cell[0][0].column];
         if (column.selectList) {
-            let select = [`<select columns="${cell[0][0].column}" class="form-control input-sm" id="tempSelect" onblur="editOnblur(this);" onchange="editOnChange(this);">`];
+            let select = [`<select columns="${cell[0][0].column}" class="form-control input-sm" id="tempSelect" onblur="dataTableEasy.ajax.reload(null, false);" onchange="editOnChange(this);">`];
             for (let item of column.selectList) {
                 let selected = '';
                 if (cell.data() === item.value) {
@@ -295,7 +295,7 @@ function tableCellEditable(id) {
                     checked = 'checked id="tempRadio"';
                 }
                 radio.push(`&nbsp;&nbsp;&nbsp;&nbsp;${item.name}&nbsp;&nbsp;<input ${checked} name="${column.data}" 
-                    columns="${cell[0][0].column}" type="radio" value="${item.value}" onclick="editOnChange(this)"/>`);
+                    columns="${cell[0][0].column}" type="radio" value="${item.value}" onclick="editOnChange(this);" onblur="dataTableEasy.ajax.reload(null, true)"/>`);
             }
             cell.data(radio.join(''));
             $('#tempRadio').focus();
@@ -303,7 +303,7 @@ function tableCellEditable(id) {
         // 否则是input text
         else {
             let val = cell.data(); // 记录之前的值，方便将光标定位到后面
-            cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="text" value="${cell.data()}" onchange="editOnChange(this)" onblur="editOnblur(this);"/>`);
+            cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="text" value="${cell.data()}" onchange="editOnChange(this)" onblur="dataTableEasy.ajax.reload(null, false);"/>`);
             $('#tempInput').val("").focus().val(val); // 将光标定位到后面
         }
     });
@@ -328,30 +328,7 @@ function editOnChange(dom) {
             toastr.error('网络异常，或服务器出现故障')
         },
         complete: () => {
-            try {
-                editOnblur(dom);
-            }catch(e){
-            }
+            dataTableEasy.ajax.reload(null, false);
         }
     });
-}
-
-// 单元格编辑，失焦关闭可输入表单
-function editOnblur(dom) {
-    let text = $(dom).val();
-    let column = dataTableEasy.columnsRecord[$(dom).attr('columns')];
-    if (column.selectList) {
-        for (let item of column.selectList) {
-            if (item.value == text) {
-                text = item.name;
-            }
-        }
-    } else if (column.radioList) {
-        for (let item of column.radioList) {
-            if (item.value == text) {
-                text = item.name;
-            }
-        }
-    }
-    dataTableEasy.cell($(dom).parent()[0]).data(text);
 }
