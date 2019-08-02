@@ -276,9 +276,11 @@ function editOnChange(dom) {
 // 单元格编辑，失焦关闭可输入表单
 function editOnblur(dom) {
     let text = $(dom).val();
-    for (let item of dataTableEasy.columnsRecord[$(dom).attr('columns')].selectList) {
-        if (item.value === text) {
-            text = item.name;
+    if (dataTableEasy.columnsRecord[$(dom).attr('columns')].selectList) {
+        for (let item of dataTableEasy.columnsRecord[$(dom).attr('columns')].selectList) {
+            if (item.value === text) {
+                text = item.name;
+            }
         }
     }
     dataTableEasy.cell($(dom).parent()[0]).data(text);
