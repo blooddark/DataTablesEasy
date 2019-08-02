@@ -103,7 +103,7 @@ let columns = [
 此参数有值则认为此列为单选框，同时会影响到添加功能。
 示例：`[{name: '男',value: '男'},{name: '女',value: '女'}]`
 ##### render （columns可选）
-函数参数，用于自定义列内容。  
+函数参数，用于自定义列内容。当你开启 select 或 radio 时，render将自动实现。  
 示例：
 ```js
 render: (data, type, row) => {

@@ -28,6 +28,30 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
                 render: item.render,
                 targets: index
             })
+        } else if (item.selectList) {
+            columnDefs.push({
+                render: (data, type, row) => {
+                    for (let select of item.selectList) {
+                        if (select.value === data) {
+                            return select.name;
+                        }
+                    }
+                    return data;
+                },
+                targets: index
+            })
+        } else if (item.radioList) {
+            columnDefs.push({
+                render: (data, type, row) => {
+                    for (let radio of item.radioList) {
+                        if (radio.value === data) {
+                            return radio.name;
+                        }
+                    }
+                    return data;
+                },
+                targets: index
+            })
         }
     });
 
@@ -37,7 +61,7 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
         processing: true,
         ajax: {
             url: listUrl,
-            type: 'get',
+            method: 'get',
             dataSrc: 'data'
         },
         columns: columns,
@@ -58,7 +82,7 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
     // 添加搜索框事件
     dataTableEasy.columns().every( function () {
         let that = this;
-        $(`input[columns=${this[0][0]}]`).on( 'keyup change', function () {
+        $(`input[columns=${this[0][0]}], select[columns=${this[0][0]}]`).on( 'keyup change', function () {
             if ( that.search() !== this.value ) {
                 that.search(this.value).draw();
             }
@@ -84,9 +108,13 @@ function handleAddSubmit() {
         method: 'post',
         data: data,
         success: (res) => {
-            toastr.success('添加成功');
-            dataTableEasy.ajax.reload();
-            $('#addModal').modal('hide');
+            if (res.code === 0) {
+                toastr.success('添加成功');
+                dataTableEasy.ajax.reload();
+                $('#addModal').modal('hide');
+            } else {
+                toastr.error(res.msg + ':' + res.code);
+            }
         },
         error: (res) => {
             toastr.error('网络异常，或服务器出现故障')
@@ -107,7 +135,16 @@ function createTableHeader(table, columns) {
         if (!columns[i].searchable) {
             theadSearch.push(`<th></th>`);
         } else {
-            theadSearch.push(`<th><input columns="${i}" class="form-control input-sm" type="text" placeholder="筛选 ${columns[i].data}"></th>`);
+            if (columns[i].selectList || columns[i].radioList) {
+                theadSearch.push(`<th><select columns="${i}" class="form-control input-sm">`);
+                theadSearch.push(`<option value="">筛选 ${columns[i].data}</option>`);
+                for (let item of columns[i].selectList || columns[i].radioList) {
+                    theadSearch.push(`<option value="${item.value}">${item.name}</option>`);
+                }
+                theadSearch.push(`</select></th>`);
+            } else {
+                theadSearch.push(`<th><input columns="${i}" class="form-control input-sm" type="text" placeholder="筛选 ${columns[i].data}"></th>`);
+            }
             searchable = true;
         }
     }
@@ -180,8 +217,12 @@ function createTableButton(table, buttonSet) {
                 method: 'delete',
                 data: {id: deleteIds},
                 success: (res) => {
-                    toastr.success('删除成功');
-                    dt.ajax.reload();
+                    if (res.code === 0) {
+                        toastr.success('删除成功');
+                        dt.ajax.reload();
+                    } else {
+                        toastr.error(res.msg + ':' + res.code);
+                    }
                 },
                 error: (res) => {
                     toastr.error('网络异常，或服务器出现故障');
@@ -236,7 +277,7 @@ function tableCellEditable(id) {
             let select = [`<select columns="${cell[0][0].column}" class="form-control input-sm" id="tempSelect" onblur="editOnblur(this);" onchange="editOnChange(this);">`];
             for (let item of column.selectList) {
                 let selected = '';
-                if (cell.data() === item.name) {
+                if (cell.data() === item.value) {
                     selected = 'selected';
                 }
                 select.push(`<option ${selected} value="${item.value}">${item.name}</option>`)
@@ -250,7 +291,7 @@ function tableCellEditable(id) {
             let radio = [];
             for (let item of column.radioList) {
                 let checked = '';
-                if (cell.data() === item.name) {
+                if (cell.data() === item.value) {
                     checked = 'checked id="tempRadio"';
                 }
                 radio.push(`&nbsp;&nbsp;&nbsp;&nbsp;${item.name}&nbsp;&nbsp;<input ${checked} name="${column.data}" 
@@ -277,7 +318,11 @@ function editOnChange(dom) {
         method: 'put',
         data: data,
         success: (res) => {
-            toastr.success('修改成功');
+            if (res.code === 0) {
+                toastr.success('修改成功');
+            } else {
+                toastr.error(res.msg + ':' + res.code);
+            }
         },
         error: (res) => {
             toastr.error('网络异常，或服务器出现故障')
@@ -297,13 +342,13 @@ function editOnblur(dom) {
     let column = dataTableEasy.columnsRecord[$(dom).attr('columns')];
     if (column.selectList) {
         for (let item of column.selectList) {
-            if (item.value === text) {
+            if (item.value == text) {
                 text = item.name;
             }
         }
     } else if (column.radioList) {
         for (let item of column.radioList) {
-            if (item.value === text) {
+            if (item.value == text) {
                 text = item.name;
             }
         }
