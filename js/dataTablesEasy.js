@@ -25,11 +25,26 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
     // 创建列重写对象
     let columnDefs = [];
     $.each(columns, (index, item) => {
-        if (item.render) {
-            columnDefs.push({
-                render: item.render,
-                targets: index
-            })
+        if (item.renderFun) {
+            if (item.isDate) {
+                item.renderDecorator = (data, type, row) => {
+                    if (data.indexOf("input") === -1) {
+                        return item.renderFun(data, type, row);
+                    } else {
+                        return data;
+                    }
+                };
+
+                columnDefs.push({
+                    render: item.renderDecorator,
+                    targets: index
+                })
+            } else {
+                columnDefs.push({
+                    render: item.render,
+                    targets: index
+                })
+            }
         } else if (item.selectList) {
             columnDefs.push({
                 render: (data, type, row) => {
@@ -51,6 +66,17 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
                         }
                     }
                     return data;
+                },
+                targets: index
+            })
+        } else if (item.isDate) {
+            columnDefs.push({
+                render: (data, type, row) => {
+                    if (data.indexOf("input") === -1) {
+                        return new Date(data).Format('yyyy-MM-dd');
+                    } else {
+                        return data;
+                    }
                 },
                 targets: index
             })
@@ -186,7 +212,7 @@ function createTableButton(table, buttonSet) {
                     for (let radio of item.radioList) {
                         modal.push(`<label style="padding-left: 20px;">${radio.name}<input style="margin-left: 10px;" name="${item.data}" type="radio" value="${radio.value}"/></label>`);
                     }
-                } else if (item.date) {
+                } else if (item.isDate) {
                     modal.push(`<input name="${item.data}" type="date" class="form-control">`);
                 } else {
                     modal.push(`<input name="${item.data}" type="text" class="form-control">`);
@@ -272,7 +298,7 @@ function tableCellEditable(id) {
             return;
         }
         // 判断是否已在编辑中
-        if (cell.data().toString().indexOf('<input') !== -1 || cell.data().toString().indexOf('<select>') !== -1) {
+        if (cell.data() && (cell.data().toString().indexOf('<input') !== -1 || cell.data().toString().indexOf('<select>') !== -1)) {
             return;
         }
         // 将静态文本变为可输入表单
@@ -316,30 +342,23 @@ function tableCellEditable(id) {
             $('#tempRadio').focus();
         }
         // 判断是否为时间
-        else if (column.radioList) {
-            let radio = [];
-            for (let item of column.radioList) {
-                let checked = '';
-                if (cell.data() === item.value) {
-                    checked = 'checked id="tempRadio"';
-                }
-                radio.push(`&nbsp;&nbsp;&nbsp;&nbsp;${item.name}&nbsp;&nbsp;<input ${checked} name="${column.data}" 
-                    columns="${cell[0][0].column}" type="radio" value="${item.value}"/>`);
-            }
-            cell.data(radio.join(''));
+        else if (column.isDate) {
+            cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="date" value="${new Date(cell.data()).Format('yyyy-MM-dd')}"/>`);
+            $('#tempInput').focus();
 
-            for (let index in column.radioList) {
-                let radioDom = $(`input[value=${column.radioList[index].value}]`);
-                radioDom.bind('click', radioDom[0], editOnChange);
-                radioDom.bind('blur', radioDom[0], editOnblur);
-            }
-            $('#tempRadio').focus();
+            let inputDom = $(`#tempInput`);
+            inputDom.bind('change', inputDom[0], editOnChange);
+            inputDom.bind('blur', inputDom[0], editOnblur);
         }
         // 否则是input text
         else {
             let val = cell.data(); // 记录之前的值，方便将光标定位到后面
-            cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="text" value="${cell.data()}" onchange="editOnChange(this)" onblur="dataTableEasy.ajax.reload(null, false);"/>`);
+            cell.data(`<input columns="${cell[0][0].column}" class="form-control input-sm" id="tempInput" type="text" value="${cell.data()}"/>`);
             $('#tempInput').val("").focus().val(val); // 将光标定位到后面
+
+            let inputDom = $(`#tempInput`);
+            inputDom.bind('change', inputDom[0], editOnChange);
+            inputDom.bind('blur', inputDom[0], editOnblur);
         }
     });
 }
@@ -347,8 +366,13 @@ function tableCellEditable(id) {
 // 单元格编辑，上传服务器
 function editOnChange(e) {
     let dom = e.data;
+    let column = dataTableEasy.columnsRecord[$(dom).attr('columns')];
     let data = {id: dataTableEasy.rows($(dom).parent()[0]).data()[0].id};
-    data[dataTableEasy.columnsRecord[$(dom).attr('columns')].data] = $(dom).val();
+    if (column.isDate) {
+        data[column.data] = new Date($(dom).val()).Format('yyyy-MM-dd');
+    } else {
+        data[column.data] = $(dom).val();
+    }
     $.ajax({
         url: dataTableEasy.editUrl,
         method: 'put',
@@ -369,6 +393,7 @@ function editOnChange(e) {
     });
 }
 
+// 单元格编辑，失去焦点刷新列表
 function editOnblur(e) {
     let dom = e.data;
     $(dom).unbind('blur', editOnblur);
@@ -376,3 +401,21 @@ function editOnblur(e) {
         dataTableEasy.ajax.reload(null, false);
     }, 100);
 }
+
+Date.prototype.Format = function(fmt) {
+    var o = {
+        "M+" : this.getMonth()+1,                 //月份
+        "d+" : this.getDate(),                    //日
+        "h+" : this.getHours(),                   //小时
+        "m+" : this.getMinutes(),                 //分
+        "s+" : this.getSeconds(),                 //秒
+        "q+" : Math.floor((this.getMonth()+3)/3), //季度
+        "S"  : this.getMilliseconds()             //毫秒
+    };
+    if(/(y+)/.test(fmt))
+        fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+    for(var k in o)
+        if(new RegExp("("+ k +")").test(fmt))
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+    return fmt;
+};

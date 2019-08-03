@@ -94,6 +94,14 @@ let columns = [
 是否显示本列，默认为true。
 ##### editable （columns可选）
 是否开启此列双击编辑功能，默认开启，但需要 `editUrl`，如果没有 `editUrl` 此项不生效。
+##### date （columns可选）
+声明此列为日期，默认关闭。默认日期是不带时间的，如果需要时间请自行render，已实现日期格式化工具，直接使用即可。
+示例：
+```js
+render: (data, type, row) => {
+    return new Date(data).Format('yyyy-MM-dd hh:mm:ss');
+},
+```
 ##### searchable （columns可选）
 是否开启此列搜索功能，默认关闭。如果开启，将在表头上方自动生成搜索框，实现搜索功能。
 ##### selectList （columns可选）
