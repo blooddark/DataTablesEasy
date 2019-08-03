@@ -9,7 +9,10 @@ let columns = [
     //     width: '10', editable:false, orderable: false, render: (data, type, row) => {
     //     return `<input name="rowCheckBox" type="checkbox"/>`;
     // }},
-    { data: 'username',
+    { data: 'username', addForm: (item) => {
+            return `<input type="checkbox" />测试${item.data}`;
+        },
+        addTitle: '用户名',
         renderFun: ( data, type, row ) => {
             return data +' (测试)';
         }},

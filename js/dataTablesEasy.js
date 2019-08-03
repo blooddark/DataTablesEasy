@@ -41,7 +41,7 @@ function createDataTable(id, listUrl, columns, addUrl, editUrl, deleteUrl, butto
                 })
             } else {
                 columnDefs.push({
-                    render: item.render,
+                    render: item.renderFun,
                     targets: index
                 })
             }
@@ -195,14 +195,16 @@ function createTableButton(table, buttonSet) {
     const addButton = {
         text: 'Add',
         action: ( e, dt, node, config ) => {
-            let modal = [`<div id="addModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"><div class="modal-dialog" role="document"><div class="modal-content">`];
-            modal.push(`<div class="ibox-content"><form onsubmit="return handleAddSubmit();" method="get" class="form-horizontal">`);
+            let modal = [`<div id="addModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"><div class="modal-dialog" role="document"><div class="modal-content"><div class="ibox-content">`];
+            modal.push(`<form onsubmit="return handleAddSubmit();" method="get" class="form-horizontal">`);
             for (let item of dataTableEasy.columnsRecord) {
                 if (!item.data || item.data === 'id') {
                     continue;
                 }
-                modal.push(`<div style="display: block;margin-top: 10px;" class="form-group"><label class="col-sm-2 control-label">${item.data}</label><div class="col-sm-10">`);
-                if (item.selectList) {
+                modal.push(`<div style="display: block;margin-top: 10px;" class="form-group"><label class="col-sm-2 control-label">${item.title || item.addTitle || item.data}</label><div class="col-sm-10">`);
+                if (item.addForm) {
+                    modal.push(item.addForm(item));
+                } else if (item.selectList) {
                     modal.push(`<select name="${item.data}" class="form-control m-b">`);
                     for (let option of item.selectList) {
                         modal.push(`<option value="${option.value}">${option.name}</option>`);
