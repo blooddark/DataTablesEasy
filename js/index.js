@@ -14,6 +14,7 @@ let columns = [
             return data +' (测试)';
         }},
     { data: 'gender' , radioList: [{name: '男',value: 1},{name: '女',value: 0}]},
+    { data: 'birthday', date: true},
     { data: 'remark', selectList: [{name: '备注1',value: '1'},{name: '备注2',value: '2'},
             {name: '备注3',value: '3'},{name: '备注4',value: '4'},{name: '备注5',value: '5'},{name: '备注6',value: '6'}]}
 ];

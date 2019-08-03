@@ -172,7 +172,7 @@ function createTableButton(table, buttonSet) {
             let modal = [`<div id="addModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"><div class="modal-dialog" role="document"><div class="modal-content">`];
             modal.push(`<div class="ibox-content"><form onsubmit="return handleAddSubmit();" method="get" class="form-horizontal">`);
             for (let item of dataTableEasy.columnsRecord) {
-                if (item.data === 'id') {
+                if (!item.data || item.data === 'id') {
                     continue;
                 }
                 modal.push(`<div style="display: block;margin-top: 10px;" class="form-group"><label class="col-sm-2 control-label">${item.data}</label><div class="col-sm-10">`);
@@ -186,6 +186,8 @@ function createTableButton(table, buttonSet) {
                     for (let radio of item.radioList) {
                         modal.push(`<label style="padding-left: 20px;">${radio.name}<input style="margin-left: 10px;" name="${item.data}" type="radio" value="${radio.value}"/></label>`);
                     }
+                } else if (item.date) {
+                    modal.push(`<input name="${item.data}" type="date" class="form-control">`);
                 } else {
                     modal.push(`<input name="${item.data}" type="text" class="form-control">`);
                 }
@@ -277,7 +279,7 @@ function tableCellEditable(id) {
         // 判断是否是select
         let column = dataTableEasy.columnsRecord[cell[0][0].column];
         if (column.selectList) {
-            let select = [`<select columns="${cell[0][0].column}" class="form-control input-sm" id="tempSelect" onblur="dataTableEasy.ajax.reload(null, false);" onchange="editOnChange(this);">`];
+            let select = [`<select name="${column.data}" columns="${cell[0][0].column}" class="form-control input-sm" id="tempSelect">`];
             for (let item of column.selectList) {
                 let selected = '';
                 if (cell.data() === item.value) {
@@ -288,6 +290,10 @@ function tableCellEditable(id) {
             select.push(`</select>`);
             cell.data(select.join(''));
             $('#tempSelect').focus();
+
+            let selectDom = $(`select[name=${column.data}]`);
+            selectDom.bind('change', selectDom[0], editOnChange);
+            selectDom.bind('blur', selectDom[0], editOnblur);
         }
         // 判断是否为radio
         else if (column.radioList) {
@@ -298,9 +304,35 @@ function tableCellEditable(id) {
                     checked = 'checked id="tempRadio"';
                 }
                 radio.push(`&nbsp;&nbsp;&nbsp;&nbsp;${item.name}&nbsp;&nbsp;<input ${checked} name="${column.data}" 
-                    columns="${cell[0][0].column}" type="radio" value="${item.value}" onclick="editOnChange(this);" onblur="dataTableEasy.ajax.reload(null, true)"/>`);
+                    columns="${cell[0][0].column}" type="radio" value="${item.value}"/>`);
             }
             cell.data(radio.join(''));
+
+            for (let index in column.radioList) {
+                let radioDom = $(`input[value=${column.radioList[index].value}]`);
+                radioDom.bind('click', radioDom[0], editOnChange);
+                radioDom.bind('blur', radioDom[0], editOnblur);
+            }
+            $('#tempRadio').focus();
+        }
+        // 判断是否为时间
+        else if (column.radioList) {
+            let radio = [];
+            for (let item of column.radioList) {
+                let checked = '';
+                if (cell.data() === item.value) {
+                    checked = 'checked id="tempRadio"';
+                }
+                radio.push(`&nbsp;&nbsp;&nbsp;&nbsp;${item.name}&nbsp;&nbsp;<input ${checked} name="${column.data}" 
+                    columns="${cell[0][0].column}" type="radio" value="${item.value}"/>`);
+            }
+            cell.data(radio.join(''));
+
+            for (let index in column.radioList) {
+                let radioDom = $(`input[value=${column.radioList[index].value}]`);
+                radioDom.bind('click', radioDom[0], editOnChange);
+                radioDom.bind('blur', radioDom[0], editOnblur);
+            }
             $('#tempRadio').focus();
         }
         // 否则是input text
@@ -313,8 +345,9 @@ function tableCellEditable(id) {
 }
 
 // 单元格编辑，上传服务器
-function editOnChange(dom) {
-    let data = {id: dataTableEasy.cell($(dom).parent().parent().children(0)[0]).data()};
+function editOnChange(e) {
+    let dom = e.data;
+    let data = {id: dataTableEasy.rows($(dom).parent()[0]).data()[0].id};
     data[dataTableEasy.columnsRecord[$(dom).attr('columns')].data] = $(dom).val();
     $.ajax({
         url: dataTableEasy.editUrl,
@@ -331,7 +364,15 @@ function editOnChange(dom) {
             toastr.error('网络异常，或服务器出现故障')
         },
         complete: () => {
-            dataTableEasy.ajax.reload(null, false);
+            editOnblur(e);
         }
     });
+}
+
+function editOnblur(e) {
+    let dom = e.data;
+    $(dom).unbind('blur', editOnblur);
+    setTimeout(function () {
+        dataTableEasy.ajax.reload(null, false);
+    }, 100);
 }
